@@ -8,16 +8,33 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name : Update composer
+    - name: Update composer
       run: make
 
     - name: phpunit
       id: phpunit
       run: make test
 
-    - name: Discord notify
-      if: steps.phpunit > 0
-      uses: tsickert/discord-webhook@v5.3.0
+    - name: Send email notification on success
+      if: ${{ job.status == 'success' }}
+      uses: dawidd6/action-send-mail@v3
       with:
-        webhook_url:
-        message: 'PHPUnit Failed ! Great job!'
+        server_address: mail.seventeeninfo.fr
+        server_port: 587
+        username: '${{secrets.SMTP_USER}}'
+        password: '${{secrets.SMTP_PASSWORD}}'
+        subject: 'Build Success'
+        body: 'Congratulations! Your PHPUnit build was successful.'
+        to: 'l.marque@it-students.fr'
+
+    - name: Send email notification on failure
+      if: ${{ job.status == 'failure' }}
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: mail.seventeeninfo.fr
+        server_port: 587
+        username: '$${{secrets.SMTP_USER}}'
+        password: '${{secrets.SMTP_PASSWORD}}'
+        subject: 'Build Fail'
+        body: 'Oops! Your PHPUnit build has failed.'
+        to: 'l.marque@it-students.fr'
